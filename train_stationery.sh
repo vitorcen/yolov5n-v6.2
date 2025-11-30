@@ -7,7 +7,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Define paths
 WORK_DIR="$SCRIPT_DIR"
-DATASET_YAML="$SCRIPT_DIR/datasets/processed/stationery_32class/dataset.yaml"
+DATASET_YAML="$SCRIPT_DIR/datasets/processed/stationery_32class/data.yaml"
 WEIGHTS="yolov5n.pt"
 PROJECT_DIR="runs/train"
 NAME="stationery_32class_yolov5n"

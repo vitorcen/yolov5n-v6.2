@@ -46,6 +46,7 @@ VOC/
 /datasets/processed/*/images
 /datasets/processed/*/labels
 # /datasets/toolkits
+convert_labels.py
 
 # MATLAB GitIgnore -----------------------------------------------------------------------------------------------------
 *.m~

@@ -2,16 +2,44 @@
 # Open Images Stationery Dataset Downloader (32-Class)
 # Downloads OID images, converts to YOLO format (normalized coords),
 # supports incremental download and parallel processing.
+#
+# Usage: ./download_stationery.sh [START_ID] [END_ID]
+#   Examples:
+#     ./download_stationery.sh          # Process all 32 classes (0-31)
+#     ./download_stationery.sh 1 5      # Process only classes ID 1-5
+#     ./download_stationery.sh 6 6      # Process only class ID 6
 
 # Don't use set -e, handle errors manually to avoid silent exits
 
+# Parse arguments for class ID range
+START_ID=${1:-0}
+END_ID=${2:-31}
+
+# Validate arguments
+if ! [[ "$START_ID" =~ ^[0-9]+$ ]] || ! [[ "$END_ID" =~ ^[0-9]+$ ]]; then
+    echo "Error: Arguments must be numbers (class IDs 0-31)"
+    exit 1
+fi
+
+if [ "$START_ID" -gt "$END_ID" ]; then
+    echo "Error: START_ID ($START_ID) must be <= END_ID ($END_ID)"
+    exit 1
+fi
+
+if [ "$START_ID" -gt 31 ] || [ "$END_ID" -gt 31 ]; then
+    echo "Error: Class IDs must be 0-31"
+    exit 1
+fi
+
 echo "=================================================================="
 echo "Open Images Stationery Dataset Downloader (32 Classes)"
+echo "Processing class IDs: ${START_ID} to ${END_ID}"
 echo "=================================================================="
 
 # --- Configuration ---
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+ORANGE='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
@@ -100,9 +128,14 @@ mkdir -p "${OUTPUT_DIR}/images/train" "${OUTPUT_DIR}/images/val" \
          "${OUTPUT_DIR}/labels/train" "${OUTPUT_DIR}/labels/val"
 echo -e "${GREEN}Output directory: ${OUTPUT_DIR}${NC}"
 
-echo -e "\n${YELLOW}[4/6] Checking existing data...${NC}"
+echo -e "\n${YELLOW}[4/6] Checking existing data (ID ${START_ID}-${END_ID})...${NC}"
 classes_to_download=()
 for i in "${!CLASSES_NAMES[@]}"; do
+    # Skip classes outside the specified range
+    if [ "$i" -lt "$START_ID" ] || [ "$i" -gt "$END_ID" ]; then
+        continue
+    fi
+
     class_name="${CLASSES_NAMES[$i]}"
     class_code="${CLASSES_CODES[$i]}"
     class_id=$i
@@ -111,15 +144,25 @@ for i in "${!CLASSES_NAMES[@]}"; do
 
     if [ "$current_count" -lt "$MIN_REQUIRED_IMAGES" ]; then
         safe_name="${class_name// /_}"
-        RAW_TRAIN_DIR="${TOOLKIT_DIR}/OID/Dataset_${safe_name}/train/${class_code}"
+        RAW_TRAIN_DIR="${TOOLKIT_DIR}/OID/Dataset_${safe_name}/train/${class_name}"
         raw_count=$(count_raw_images "$RAW_TRAIN_DIR")
 
         if [ "$raw_count" -ge "$IMAGES_PER_CLASS" ]; then
+            # Has enough raw data, needs conversion
             echo -e "  - Class '${class_name}' (ID ${class_id}): ${YELLOW}Processed: ${current_count}, Raw: ${raw_count}${NC} - Need conversion"
+            classes_to_download+=("${class_id}:${class_name}:${class_code}")
+        elif [ "$current_count" -gt 0 ] && [ "$current_count" -ge "$raw_count" ]; then
+            # Processed >= Raw means all available data has been processed - orange (done but insufficient)
+            echo -e "  - Class '${class_name}' (ID ${class_id}): ${ORANGE}${current_count}/${IMAGES_PER_CLASS}${NC} - Insufficient (only ${raw_count} available)"
+        elif [ "$raw_count" -gt "$current_count" ]; then
+            # Has more raw data than processed, needs conversion
+            echo -e "  - Class '${class_name}' (ID ${class_id}): ${YELLOW}Processed: ${current_count}, Raw: ${raw_count}${NC} - Need conversion"
+            classes_to_download+=("${class_id}:${class_name}:${class_code}")
         else
+            # No data at all, need to download
             echo -e "  - Class '${class_name}' (ID ${class_id}): ${RED}Processed: ${current_count}, Raw: ${raw_count}${NC} - Need download"
+            classes_to_download+=("${class_id}:${class_name}:${class_code}")
         fi
-        classes_to_download+=("${class_id}:${class_name}:${class_code}")
     else
         echo -e "  - Class '${class_name}' (ID ${class_id}): ${GREEN}${current_count}/${IMAGES_PER_CLASS}${NC} - OK"
     fi
@@ -144,9 +187,9 @@ else
 
         cd "${TOOLKIT_DIR}"
 
-        # Define raw data directories
-        RAW_TRAIN_DIR="${TOOLKIT_DIR}/OID/Dataset_${safe_name}/train/${class_code}"
-        RAW_VAL_DIR="${TOOLKIT_DIR}/OID/Dataset_${safe_name}/validation/${class_code}"
+        # Define raw data directories (OIDv4_ToolKit uses class name, not code)
+        RAW_TRAIN_DIR="${TOOLKIT_DIR}/OID/Dataset_${safe_name}/train/${class_name}"
+        RAW_VAL_DIR="${TOOLKIT_DIR}/OID/Dataset_${safe_name}/validation/${class_name}"
 
         # Check existing raw train images
         current_raw_train_count=$(count_raw_images "$RAW_TRAIN_DIR")
@@ -186,8 +229,8 @@ else
 
         for split in "train" "validation"; do
             yolo_split=$([ "$split" == "validation" ] && echo "val" || echo "train")
-            oid_label_dir="${temp_base}/${split}/${class_code}/Label"
-            oid_image_dir="${temp_base}/${split}/${class_code}"
+            oid_label_dir="${temp_base}/${split}/${class_name}/Label"
+            oid_image_dir="${temp_base}/${split}/${class_name}"
 
             if [ -d "$oid_label_dir" ]; then
                 label_count=$(ls "$oid_label_dir"/*.txt 2>/dev/null | wc -l)
@@ -213,9 +256,9 @@ else
 
                     while IFS= read -r line || [[ -n "$line" ]]; do
                         [ -z "$line" ] && continue
-                        # Match only the correct class code for the current class
-                        if [[ "$line" == "$class_code "* ]]; then
-                            coords="${line#$class_code }"
+                        # Match only the correct class name for the current class
+                        if [[ "$line" == "$class_name "* ]]; then
+                            coords="${line#$class_name }"
                             x1=$(echo $coords | awk '{print $1}')
                             y1=$(echo $coords | awk '{print $2}')
                             x2=$(echo $coords | awk '{print $3}')
@@ -271,11 +314,11 @@ for i in "${!CLASSES[@]}"; do
     fi
 done
 
-# Generate dataset.yaml
-YAML_PATH="${OUTPUT_DIR}/dataset.yaml"
-cat > "${YAML_PATH}" << 'EOF'
+# Generate data.yaml
+YAML_PATH="${OUTPUT_DIR}/data.yaml"
+cat > "${YAML_PATH}" << EOF
 # YOLOv5 Stationery Dataset (32 Classes)
-path: ../datasets/processed/stationery_32class
+path: ${OUTPUT_DIR}
 train: images/train
 val: images/val
 nc: 32

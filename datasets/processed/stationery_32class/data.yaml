@@ -1,5 +1,5 @@
 # YOLOv5 Stationery Dataset (32 Classes)
-path: ../datasets/processed/stationery_32class
+path: datasets/processed/stationery_32class
 train: images/train
 val: images/val
 nc: 32
