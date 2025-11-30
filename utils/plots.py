@@ -85,7 +85,11 @@ class Annotator:
         if self.pil or not is_ascii(label):
             self.draw.rectangle(box, width=self.lw, outline=color)  # box
             if label:
-                w, h = self.font.getsize(label)  # text width, height
+                try:
+                    w, h = self.font.getsize(label)  # text width, height
+                except AttributeError:
+                    left, top, right, bottom = self.font.getbbox(label)
+                    w, h = right - left, bottom - top
                 outside = box[1] - h >= 0  # label fits outside box
                 self.draw.rectangle(
                     (box[0], box[1] - h if outside else box[1], box[0] + w + 1,
@@ -117,7 +121,12 @@ class Annotator:
 
     def text(self, xy, text, txt_color=(255, 255, 255)):
         # Add text to image (PIL-only)
-        w, h = self.font.getsize(text)  # text width, height
+        # getsize is deprecated in Pillow 10.0+ and removed, use getbbox or getlength
+        try:
+            w, h = self.font.getsize(text)  # old method
+        except AttributeError:
+            left, top, right, bottom = self.font.getbbox(text)
+            w, h = right - left, bottom - top
         self.draw.text((xy[0], xy[1] - h + 1), text, fill=txt_color, font=self.font)
 
     def result(self):

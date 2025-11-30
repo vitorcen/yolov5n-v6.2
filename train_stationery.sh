@@ -7,12 +7,17 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Define paths
 WORK_DIR="$SCRIPT_DIR"
-DATASET_YAML="$SCRIPT_DIR/datasets/processed/stationery_4200/dataset.yaml"
+DATASET_YAML="$SCRIPT_DIR/datasets/processed/stationery_32class/dataset.yaml"
 WEIGHTS="yolov5n.pt"
+PROJECT_DIR="runs/train"
+NAME="stationery_32class_yolov5n"
+
+# Hyperparameters
 IMG_SIZE=640
-BATCH_SIZE=16
-EPOCHS=100
+BATCH_SIZE=32
+EPOCHS=200
 DEVICE="0"
+WORKERS=8
 
 # Change to the working directory
 cd "$WORK_DIR"
@@ -23,9 +28,10 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate yolov5_v62
 
 echo "Starting YOLOv5 training..."
-echo "Data: $DATASET_YAML"
+echo "Data:    $DATASET_YAML"
 echo "Weights: $WEIGHTS"
-echo "Device: $DEVICE"
+echo "Epochs:  $EPOCHS"
+echo "Batch:   $BATCH_SIZE"
 
 python train.py \
     --img $IMG_SIZE \
@@ -33,6 +39,9 @@ python train.py \
     --epochs $EPOCHS \
     --data "$DATASET_YAML" \
     --weights $WEIGHTS \
-    --device $DEVICE
+    --device $DEVICE \
+    --project "$PROJECT_DIR" \
+    --name "$NAME" \
+    --workers $WORKERS
 
-echo "Training complete."
+echo "Training complete. Results saved to $PROJECT_DIR/$NAME"

@@ -1,0 +1,38 @@
+# YOLOv5 Stationery Dataset (32 Classes)
+path: ../datasets/processed/stationery_32class
+train: images/train
+val: images/val
+nc: 32
+names:
+  - Pen               # 笔
+  - Pencil case       # 铅笔盒
+  - Pencil sharpener  # 卷笔刀
+  - Eraser            # 橡皮擦
+  - Ruler             # 尺子
+  - Scissors          # 剪刀
+  - Calculator        # 计算器
+  - Stapler           # 订书机
+  - Adhesive tape     # 胶带
+  - Paper towel       # 纸巾
+  - Paper cutter      # 裁纸刀
+  - Laptop            # 笔记本电脑
+  - Computer keyboard # 电脑键盘
+  - Computer mouse    # 电脑鼠标
+  - Mobile phone      # 手机
+  - Tablet computer   # 平板电脑
+  - Clock             # 时钟
+  - Alarm clock       # 闹钟
+  - Digital clock     # 数字时钟
+  - Lamp              # 台灯
+  - Flashlight        # 手电筒
+  - Box               # 盒子
+  - Bottle            # 瓶子
+  - Mug               # 马克杯
+  - Coffee cup        # 咖啡杯
+  - Measuring cup     # 量杯
+  - Handbag           # 手提包
+  - Plastic bag       # 塑料袋
+  - Glasses           # 眼镜
+  - Backpack          # 背包
+  - Ring binder       # 活页夹
+  - Book              # 书

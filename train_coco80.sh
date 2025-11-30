@@ -22,7 +22,7 @@ conda activate yolov5_v62
 echo "Starting training..."
 python train.py --img 640 \
                 --batch 32 \
-                --epochs 50 \
+                --epochs 200 \
                 --data "$DATA_YAML" \
                 --weights "$WEIGHTS" \
                 --device 0 \

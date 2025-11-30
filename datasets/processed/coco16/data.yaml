@@ -1,0 +1,30 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# COCO16 Dataset (Subset of COCO 2017)
+# 10 Animals + 6 Household/Common items
+
+# Dataset root directory (relative to this config file)
+path: /root/work/gpdla_sdk/yolov5n-v6.2/datasets/processed/coco16
+train: images/train2017
+val: images/val2017
+test:  # test images (optional)
+
+# Classes
+nc: 16  # number of classes
+names: [
+  'bird',          # 0
+  'cat',           # 1
+  'dog',           # 2
+  'horse',         # 3
+  'sheep',         # 4
+  'cow',           # 5
+  'elephant',      # 6
+  'bear',          # 7
+  'zebra',         # 8
+  'giraffe',       # 9
+  'teddy bear',    # 10
+  'potted plant',  # 11
+  'chair',         # 12
+  'couch',         # 13
+  'bed',           # 14
+  'dining table'   # 15
+]
